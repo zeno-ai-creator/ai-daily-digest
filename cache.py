@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+from zoneinfo import ZoneInfo
+
+from fetchers import fetch_all_sections
+from fetchers.daily_analysis import generate_daily_analysis
+
+CACHE_DIR = Path(__file__).parent / "data" / "cache"
+CACHE_FILE = CACHE_DIR / "daily_news.json"
+HK_TZ = ZoneInfo("Asia/Hong_Kong")
+CACHE_TTL_HOURS = 12
+REFRESH_HOURS = (8, 18)
+
+
+def _now_hk() -> datetime:
+    return datetime.now(HK_TZ)
+
+
+def _now_iso() -> str:
+    return _now_hk().isoformat(timespec="seconds")
+
+
+def current_cache_slot(now: datetime | None = None) -> str:
+    """依香港時間劃分快取時段：08:00 為上午、18:00 為下午。"""
+    now = now or _now_hk()
+    date_str = now.date().isoformat()
+
+    if now.hour >= REFRESH_HOURS[1]:
+        return f"{date_str}-pm"
+    if now.hour >= REFRESH_HOURS[0]:
+        return f"{date_str}-am"
+
+    previous_day = (now - timedelta(days=1)).date().isoformat()
+    return f"{previous_day}-pm"
+
+
+def next_refresh_label(now: datetime | None = None) -> str:
+    now = now or _now_hk()
+    today = now.date()
+
+    morning = datetime.combine(today, datetime.min.time(), tzinfo=HK_TZ).replace(
+        hour=REFRESH_HOURS[0]
+    )
+    evening = datetime.combine(today, datetime.min.time(), tzinfo=HK_TZ).replace(
+        hour=REFRESH_HOURS[1]
+    )
+
+    if now < morning:
+        target = morning
+    elif now < evening:
+        target = evening
+    else:
+        target = morning + timedelta(days=1)
+
+    return target.strftime("%Y年%m月%d日 %H:%M")
+
+
+def load_cache() -> dict[str, Any] | None:
+    if not CACHE_FILE.exists():
+        return None
+    try:
+        with CACHE_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def save_cache(payload: dict[str, Any]) -> dict[str, Any]:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with CACHE_FILE.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    return payload
+
+
+def _parse_updated_at(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=HK_TZ)
+    return dt.astimezone(HK_TZ)
+
+
+def is_cache_fresh(cache: dict[str, Any] | None) -> bool:
+    if not cache:
+        return False
+
+    updated_at = _parse_updated_at(cache.get("updated_at"))
+    if updated_at is None:
+        return False
+
+    now = _now_hk()
+    age_hours = (now - updated_at).total_seconds() / 3600
+    if age_hours >= CACHE_TTL_HOURS:
+        return False
+
+    return cache.get("slot") == current_cache_slot(now)
+
+
+def refresh_cache() -> dict[str, Any]:
+    now = _now_hk()
+    data = fetch_all_sections()
+    payload = {
+        "date": now.date().isoformat(),
+        "slot": current_cache_slot(now),
+        "updated_at": _now_iso(),
+        "cache_ttl_hours": CACHE_TTL_HOURS,
+        "refresh_schedule": list(REFRESH_HOURS),
+        "next_refresh": next_refresh_label(now),
+        "sections": data["sections"],
+        "daily_analysis": generate_daily_analysis(data["sections"]),
+    }
+    return save_cache(payload)
+
+
+def get_daily_data(force_refresh: bool = False) -> tuple[dict[str, Any], bool]:
+    cache = load_cache()
+    if not force_refresh and is_cache_fresh(cache):
+        return cache, False
+
+    return refresh_cache(), True
