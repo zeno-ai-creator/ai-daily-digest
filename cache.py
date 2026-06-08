@@ -59,6 +59,40 @@ def next_refresh_label(now: datetime | None = None) -> str:
     return target.strftime("%Y年%m月%d日 %H:%M")
 
 
+def get_current_hk_time_label() -> str:
+    """回傳目前香港時間字串（供 UI 顯示）。"""
+    return _now_hk().strftime("%Y年%m月%d日 %H:%M")
+
+
+def get_next_refresh_datetime(now: datetime | None = None) -> datetime:
+    """回傳下次預定刷新時間（datetime 物件，Asia/Hong_Kong）。"""
+    now = now or _now_hk()
+    today = now.date()
+    morning = datetime.combine(today, datetime.min.time(), tzinfo=HK_TZ).replace(hour=REFRESH_HOURS[0])
+    evening = datetime.combine(today, datetime.min.time(), tzinfo=HK_TZ).replace(hour=REFRESH_HOURS[1])
+
+    if now < morning:
+        return morning
+    elif now < evening:
+        return evening
+    return morning + timedelta(days=1)
+
+
+def format_updated_at(value: str | None) -> str:
+    """格式化 updated_at 為繁體中文易讀字串。"""
+    if not value:
+        return "未知"
+    try:
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=HK_TZ)
+        else:
+            dt = dt.astimezone(HK_TZ)
+        return dt.strftime("%Y年%m月%d日 %H:%M")
+    except (ValueError, TypeError):
+        return value or "未知"
+
+
 def load_cache() -> dict[str, Any] | None:
     if not CACHE_FILE.exists():
         return None
