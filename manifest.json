@@ -1,0 +1,26 @@
+{
+  "name": "AI 每日資訊中心",
+  "short_name": "AI每日資訊",
+  "description": "每日彙整 AI 新聞、Threads 台港話題、香港與國際熱門頭條",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#1E3A5F",
+  "lang": "zh-TW",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
