@@ -9,8 +9,10 @@ from .scoring import THREADS_KEYWORDS, rank_articles
 from .summarize import enrich_with_summary
 
 AI_QUERY = (
-    "AI OR 人工智慧 OR LLM OR Agent OR ChatGPT OR OpenAI OR Gemini OR Claude"
+    "AI OR 人工智慧 OR LLM OR Agent OR ChatGPT OR OpenAI OR Gemini OR Claude "
+    'OR Apple OR WWDC OR "Siri AI" OR "Apple Intelligence" OR WWDC2026'
 )
+APPLE_QUERY = 'Apple WWDC OR "Siri AI" OR "Apple Intelligence" OR WWDC2026'
 THREADS_QUERY = f"Threads ({AI_QUERY}) OR Meta Threads 人工智慧"
 
 SECTION_CONFIG: dict[str, dict[str, Any]] = {
@@ -21,13 +23,17 @@ SECTION_CONFIG: dict[str, dict[str, Any]] = {
         "feeds": [
             (
                 "https://news.google.com/rss/search?q="
-                + quote_plus("人工智慧 OR AI OR ChatGPT OR OpenAI OR LLM OR Agent")
+                + quote_plus(
+                    "人工智慧 OR AI OR ChatGPT OR OpenAI OR LLM OR Agent "
+                    'OR Apple OR WWDC OR "Siri AI" OR "Apple Intelligence" OR WWDC2026'
+                )
                 + "&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
             ),
             (
                 "https://news.google.com/rss/search?q="
                 + quote_plus(
-                    "artificial intelligence OR machine learning OR LLM OR AI agent"
+                    "artificial intelligence OR machine learning OR LLM OR AI agent "
+                    'OR Apple WWDC OR "Siri AI" OR "Apple Intelligence" OR WWDC2026'
                 )
                 + "&hl=en-US&gl=US&ceid=US:en"
             ),
@@ -84,6 +90,11 @@ SECTION_CONFIG: dict[str, dict[str, Any]] = {
         "description": "香港本地與區域頭條新聞",
         "feeds": [
             "https://news.google.com/rss?hl=zh-HK&gl=HK&ceid=HK:zh-Hant",
+            (
+                "https://news.google.com/rss/search?q="
+                + quote_plus('Apple OR WWDC OR "Apple Intelligence" OR Siri OR "Siri AI" OR 蘋果')
+                + "&hl=zh-HK&gl=HK&ceid=HK:zh-Hant"
+            ),
         ],
         "limit": 15,
         "prioritize_ai": False,
@@ -98,6 +109,13 @@ SECTION_CONFIG: dict[str, dict[str, Any]] = {
             (
                 "https://news.google.com/rss/search?q="
                 + quote_plus("world news OR international")
+                + "&hl=en-US&gl=US&ceid=US:en"
+            ),
+            (
+                "https://news.google.com/rss/search?q="
+                + quote_plus(
+                    'Apple WWDC OR "Siri AI" OR "Apple Intelligence" OR WWDC2026 OR Apple Intelligence'
+                )
                 + "&hl=en-US&gl=US&ceid=US:en"
             ),
         ],

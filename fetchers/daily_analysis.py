@@ -40,6 +40,15 @@ INTERNATIONAL_KEYWORDS: dict[str, int] = {
     "frontier": 6,
     "model": 4,
     "大語言模型": 7,
+    # Apple 相關（每日重點分析優先 + 香港/國際本地討論）
+    "apple": 9,
+    "wwdc": 10,
+    "wwdc2026": 10,
+    "apple intelligence": 10,
+    "siri": 8,
+    "siri ai": 8,
+    "蘋果": 7,
+    "蘋果智慧": 7,
 }
 
 LOCAL_PENALTY_KEYWORDS: dict[str, int] = {
@@ -75,6 +84,18 @@ THEME_RULES: list[dict[str, Any]] = [
         "regional": (
             "港台內容與廣告產業需調整 SEO 與內容策略；開發者可善用 Gemini API "
             "與 Google Cloud 方案加速產品落地。"
+        ),
+    },
+    {
+        "theme": "apple",
+        "patterns": [r"apple", r"wwdc", r"siri", r"apple intelligence"],
+        "importance": (
+            "Apple 的 WWDC 與 Apple Intelligence（含 Siri AI 升級）帶來端側 AI、"
+            "系統深度整合與開發者工具重大更新，影響全球消費級 AI 體驗與硬體迭代。"
+        ),
+        "regional": (
+            "港台開發者、App 業者與供應鏈可關注新 Intelligence API、快捷指令與 "
+            "Siri 強化功能，把握 iOS/macOS 生態的本地化 AI 應用與配件機會。"
         ),
     },
     {
@@ -282,6 +303,28 @@ GIANT_RULES: list[dict[str, Any]] = [
         "product_regional": (
             "港台內容與行銷產業需調整 SEO 與內容策略，"
             "並善用 Google Cloud 生態加速產品落地。"
+        ),
+    },
+    {
+        "giant": "apple",
+        "label": "Apple",
+        "patterns": [r"\bapple\b", r"wwdc", r"siri", r"apple intelligence"],
+        "card_style": "blue",
+        "agent_importance": (
+            "Apple 將 Apple Intelligence 與 Siri 深度整合至系統與端側裝置，"
+            "推動消費級 Agent 從雲端走向本地化、私密且低延遲執行。"
+        ),
+        "agent_regional": (
+            "港台 App 開發者與配件廠商可及早適配新 Intelligence API、App Intents 與快捷指令，"
+            "掌握 iOS / macOS 生態的 AI 紅利與本地化服務機會。"
+        ),
+        "product_importance": (
+            "Apple 的硬體 + 軟體 + 端側 AI 策略，將重塑個人運算與行動裝置的"
+            "AI 體驗門檻，並帶動供應鏈與內容服務的下一波需求。"
+        ),
+        "product_regional": (
+            "港台供應鏈、硬體廠商與內容服務商可關注 Apple 生態新 API 帶來的"
+            "硬體升級週期與在地化 App / 服務機會。"
         ),
     },
     {

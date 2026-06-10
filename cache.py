@@ -155,8 +155,17 @@ def refresh_cache() -> dict[str, Any]:
 
 
 def get_daily_data(force_refresh: bool = False) -> tuple[dict[str, Any], bool]:
+    if force_refresh:
+        # 強化「立即更新」按鈕的強制清除快取功能：刪除快取檔、忽略 TTL/slot 直接重抓
+        if CACHE_FILE.exists():
+            try:
+                CACHE_FILE.unlink()
+            except Exception:
+                pass
+        return refresh_cache(), True
+
     cache = load_cache()
-    if not force_refresh and is_cache_fresh(cache):
+    if is_cache_fresh(cache):
         return cache, False
 
     return refresh_cache(), True

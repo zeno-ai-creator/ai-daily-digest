@@ -32,8 +32,7 @@ st.markdown(
     <meta name="apple-mobile-web-app-title" content="AI 每日資訊中心">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
-    """,
-    unsafe_allow_html=True,
+    """, unsafe_allow_html=True,
 )
 
 # PWA Service Worker 註冊 + 安裝提示捕捉（需在頁面載入後執行）
@@ -81,8 +80,7 @@ st.markdown(
       };
     })();
     </script>
-    """,
-    unsafe_allow_html=True,
+    """, unsafe_allow_html=True,
 )
 
 # ============ 主題與樣式 ============
@@ -152,6 +150,9 @@ DARK_CSS = """
 .agent-label-green { color: #86EFAC; }
 .search-result-banner { background: #1E2937; border: 1px solid #334155; border-radius: 8px; padding: 0.5rem 0.9rem; margin-bottom: 0.8rem; font-size: 0.9rem; color: #CBD5E1; }
 .tracked-chip { display: inline-block; background: #1D4ED8; color: #DBEAFE; font-size: 0.7rem; padding: 0.1rem 0.45rem; border-radius: 999px; margin-left: 0.35rem; }
+.read-source { font-size: 0.74rem; margin-top: -0.05rem; margin-bottom: 0.28rem; opacity: 0.9; }
+.read-source a { color: #93C5FD; text-decoration: none; border-bottom: 1px dotted rgba(147, 197, 253, 0.6); }
+.read-source a:hover { opacity: 1; border-bottom-style: solid; }
 </style>
 """
 
@@ -224,6 +225,9 @@ LIGHT_CSS = """
 .agent-label-green { color: #15803D; }
 .search-result-banner { background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 0.5rem 0.9rem; margin-bottom: 0.8rem; font-size: 0.9rem; color: #334155; }
 .tracked-chip { display: inline-block; background: #1D4ED8; color: #DBEAFE; font-size: 0.7rem; padding: 0.1rem 0.45rem; border-radius: 999px; margin-left: 0.35rem; }
+.read-source { font-size: 0.74rem; margin-top: -0.05rem; margin-bottom: 0.28rem; opacity: 0.9; }
+.read-source a { color: #1E40AF; text-decoration: none; border-bottom: 1px dotted rgba(30, 64, 175, 0.5); }
+.read-source a:hover { opacity: 1; border-bottom-style: solid; }
 </style>
 """
 
@@ -321,8 +325,12 @@ def render_agent_giant_item(item: dict, index: int, *, search_query: str = "", t
 
     event_html = _highlight_match(event, search_query) if search_query else html.escape(event)
 
+    link_esc = html.escape(link, quote=True) if link and link != "#" else ""
+    read_link = f'<div class="read-source"><a href="{link_esc}" target="_blank">🔗 閱讀原文</a></div>' if link_esc else ""
+
     # 確保 unsafe_allow_html=True，讓 analysis-label / analysis-text class 的 div 正確渲染，
     # 並顯示 🌐 ⚡ 🇭🇰🇹🇼 等表情符號與漂亮排版（重點分析卡片）
+    # 每條重點下方加入可點擊的真實新聞原始連結
     st.markdown(
         f"""
         <div class="{card_class}">
@@ -338,13 +346,15 @@ def render_agent_giant_item(item: dict, index: int, *, search_query: str = "", t
             </div>
             <div class="analysis-label {label_class}">🌐 國際重點</div>
             <div class="analysis-text">{event_html}</div>
+            {read_link}
             <div class="analysis-label {label_class}">⚡ 重要性（全球影響）</div>
             <div class="analysis-text">{html.escape(importance)}</div>
+            {read_link}
             <div class="analysis-label {label_class}">🇭🇰🇹🇼 對香港／台灣影響</div>
             <div class="analysis-text">{html.escape(regional)}</div>
+            {read_link}
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True,
     )
 
 
@@ -353,7 +363,7 @@ def render_highlight(highlight: dict, index: int, *, search_query: str = "", tra
     importance = highlight.get("importance", "")
     regional = highlight.get("regional", "")
     source = highlight.get("source", "")
-    link = highlight.get("link", "#")
+    link = highlight.get("link", "") or "#"
 
     meta = f"參考來源：{source}" if source else "參考來源：新聞彙整"
 
@@ -363,8 +373,13 @@ def render_highlight(highlight: dict, index: int, *, search_query: str = "", tra
 
     event_html = _highlight_match(event, search_query) if search_query else html.escape(event)
 
-    # 確保 unsafe_allow_html=True，讓 analysis-label / analysis-text class 的 div 正確渲染，
-    # 並顯示 🌐 ⚡ 🇭🇰🇹🇼 等表情符號與漂亮排版（每日重點分析卡片）
+    link_esc = html.escape(link, quote=True) if link and link != "#" else ""
+    read_link = f'<div class="read-source"><a href="{link_esc}" target="_blank">🔗 閱讀原文</a></div>' if link_esc else ""
+
+    # 修復重點分析的 HTML 渲染問題：所有 st.markdown 強制 unsafe_allow_html=True
+    # 確保 analysis-label / analysis-text / read-source 等自訂 div 正確渲染（非 raw HTML）
+    # 並顯示 🌐 ⚡ 🇭🇰🇹🇼 表情符號與漂亮排版（每日重點分析卡片）
+    # Apple WWDC / Siri AI / Apple Intelligence 已透過關鍵字權重提升優先度
     st.markdown(
         f"""
         <div class="section-card">
@@ -379,13 +394,15 @@ def render_highlight(highlight: dict, index: int, *, search_query: str = "", tra
             </div>
             <div class="analysis-label">🌐 國際核心事件／趨勢</div>
             <div class="analysis-text">{event_html}</div>
+            {read_link}
             <div class="analysis-label">⚡ 為什麼重要（全球影響）</div>
             <div class="analysis-text">{html.escape(importance)}</div>
+            {read_link}
             <div class="analysis-label">🇭🇰🇹🇼 對香港／台灣的可能影響或機會</div>
             <div class="analysis-text">{html.escape(regional)}</div>
+            {read_link}
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True,
     )
 
 
@@ -429,8 +446,7 @@ def render_article(article: dict, *, show_ai_summary: bool = False, search_query
             <div class="article-meta">{html.escape(meta)}</div>
             {summary_html}
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True,
     )
 
 
@@ -482,7 +498,7 @@ def main() -> None:
         if st.button(theme_label, use_container_width=True, key="theme_toggle"):
             toggle_theme()
 
-        st.markdown("---", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         # 全域搜尋（側邊欄也放一個，頂部也會有）
         search_query = st.text_input(
@@ -492,10 +508,10 @@ def main() -> None:
             placeholder="輸入關鍵字過濾新聞...",
         ).strip()
 
-        st.markdown("---", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         # 自訂追蹤巨頭
-        st.markdown("**🎯 自訂追蹤巨頭**", unsafe_allow_html=True)
+        st.markdown("<strong>🎯 自訂追蹤巨頭</strong>", unsafe_allow_html=True)
         st.caption("勾選後將在「每日重點分析」與「AI Agent 與巨頭動態」優先顯示相關內容")
 
         current_keys = st.session_state.get("tracked_giant_keys", ["xai", "nvidia", "openai", "google", "anthropic"])
@@ -512,10 +528,10 @@ def main() -> None:
         if tracked_labels:
             st.caption("目前優先：" + "、".join(tracked_labels))
 
-        st.markdown("---", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         # 六大板塊導覽
-        st.markdown("**六大板塊**", unsafe_allow_html=True)
+        st.markdown("<strong>六大板塊</strong>", unsafe_allow_html=True)
         st.markdown("- 📊 每日重點分析", unsafe_allow_html=True)
         st.markdown("- 🤖 AI 新聞（高相關排序 + 摘要）", unsafe_allow_html=True)
         st.markdown("- 🧵 Threads 台灣", unsafe_allow_html=True)
@@ -523,17 +539,18 @@ def main() -> None:
         st.markdown("- 🇭🇰 香港 Google 新聞", unsafe_allow_html=True)
         st.markdown("- 🌍 國際熱門話題", unsafe_allow_html=True)
 
-        st.markdown("---", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         # 更新狀態與控制
-        st.markdown("**⏰ 更新狀態**", unsafe_allow_html=True)
+        st.markdown("<strong>⏰ 更新狀態</strong>", unsafe_allow_html=True)
         st.caption(f"目前香港時間：{current_hk}")
         st.caption(f"下次更新時間：{next_label}")
         st.caption("快取有效期 12 小時，香港時間每日 08:00 與 18:00 自動刷新。支援 PWA 離線快取。")
 
         force_refresh = st.button("🔄 立即更新", use_container_width=True)
+        # 按下時會觸發 cache.get_daily_data(force_refresh=True) 強制刪除快取檔 + 立即重抓所有來源（含 Apple 強化後的 RSS）
 
-        st.markdown("---", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         # 背景自動更新提示（Streamlit Cloud 相容）
         with st.expander("🔄 背景自動更新設定提示", expanded=False):
@@ -550,19 +567,17 @@ def main() -> None:
                 3. 手動觸發：直接在本機或伺服器執行 `python update_cache.py`。
 
                 這樣即可接近「每天 08:00 / 18:00 自動刷新」的體驗。
-                """,
-                unsafe_allow_html=True,
+                """, unsafe_allow_html=True,
             )
 
         # PWA 安裝提示
-        st.markdown("---", unsafe_allow_html=True)
-        st.markdown("**📲 安裝 PWA**", unsafe_allow_html=True)
+        st.markdown('<hr>', unsafe_allow_html=True)
+        st.markdown("<strong>📲 安裝 PWA</strong>", unsafe_allow_html=True)
         st.caption("將本 App 安裝到主畫面，支援離線瀏覽快取資料與類似原生 App 體驗。")
         if st.button("📲 安裝 / 加入主畫面", use_container_width=True, key="pwa_install_btn"):
             # 透過注入的 JS 觸發安裝，必須 unsafe_allow_html=True
             st.markdown(
-                "<script>if (window.installPWA) { window.installPWA(); } else { alert('請使用支援 PWA 的瀏覽器（Chrome / Edge / Safari）。'); }</script>",
-                unsafe_allow_html=True,
+                "<script>if (window.installPWA) { window.installPWA(); } else { alert('請使用支援 PWA 的瀏覽器（Chrome / Edge / Safari）。'); }</script>", unsafe_allow_html=True,
             )
         st.caption("提示：第一次開啟後，瀏覽器可能會自動顯示安裝提示。")
 
@@ -570,8 +585,7 @@ def main() -> None:
     # 確保 unsafe_allow_html=True，正確渲染自訂 class 的 HTML（標題排版）
     st.markdown('<p class="main-header">每日 AI 資訊中心</p>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="sub-header">彙整 AI 新聞、Threads 台港話題、香港與國際熱門頭條</p>',
-        unsafe_allow_html=True,
+        '<p class="sub-header">彙整 AI 新聞、Threads 台港話題、香港與國際熱門頭條</p>', unsafe_allow_html=True,
     )
 
     # 頂部也放一個搜尋列（更醒目）
@@ -645,8 +659,7 @@ def main() -> None:
           setTimeout(checkOfflineStatus, 1800);
         }})();
         </script>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True,
     )
 
     # 搜尋結果提示
@@ -654,8 +667,7 @@ def main() -> None:
         # 確保 unsafe_allow_html=True，避免 search-result-banner div 顯示為 raw HTML
         st.markdown(
             f'<div class="search-result-banner">🔍 目前搜尋：「{html.escape(effective_query)}」'
-            f'（符合的項目會優先顯示，點擊卡片仍可開啟原文）</div>',
-            unsafe_allow_html=True,
+            f'（符合的項目會優先顯示，點擊卡片仍可開啟原文）</div>', unsafe_allow_html=True,
         )
 
     # ========== 分頁 ==========
@@ -666,7 +678,7 @@ def main() -> None:
 
     # ---- 📊 每日重點分析 ----
     with tabs[0]:
-        st.markdown(f"**{analysis['description']}**", unsafe_allow_html=True)
+        st.markdown(f"<strong>{analysis['description']}</strong>", unsafe_allow_html=True)
         if tracked_keys:
             st.caption("已啟用自訂追蹤巨頭優先排序：" + "、".join(tracked_labels))
         st.caption(
@@ -697,12 +709,11 @@ def main() -> None:
         st.markdown(
             f'<div class="subsection-title">'
             f'{agent_giants.get("icon", "🌐")} {agent_giants.get("title", "AI Agent 與巨頭動態")}'
-            f'</div>',
-            unsafe_allow_html=True,
+            f'</div>', unsafe_allow_html=True,
         )
         if tracked_keys:
             st.caption("追蹤巨頭相關已自動置頂")
-        st.markdown(f"**{agent_giants.get('description', '')}**", unsafe_allow_html=True)
+        st.markdown(f"<strong>{agent_giants.get('description', '')}</strong>", unsafe_allow_html=True)
         st.caption(
             f"共 {agent_giants.get('count', 0)} 則動態 · "
             f"分析生成時間（香港時間）：{agent_giants.get('generated_at', analysis.get('generated_at', '未知'))}"
@@ -725,7 +736,7 @@ def main() -> None:
     # ---- 其他板塊 ----
     for tab, section in zip(tabs[1:], data.get("sections", [])):
         with tab:
-            st.markdown(f"**{section['description']}**", unsafe_allow_html=True)
+            st.markdown(f"<strong>{section['description']}</strong>", unsafe_allow_html=True)
             st.caption(f"共 {section.get('count', 0)} 則")
 
             articles = section.get("articles", [])

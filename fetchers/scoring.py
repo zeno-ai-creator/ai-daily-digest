@@ -26,6 +26,15 @@ AI_KEYWORDS: dict[str, int] = {
     "Threads": 3,
     "自動化": 2,
     "科技": 1,
+    # Apple 相關來源權重（提高 AI 新聞與重點分析優先度）
+    "WWDC": 8,
+    "WWDC2026": 8,
+    "Apple Intelligence": 8,
+    "Siri AI": 7,
+    "Siri": 6,
+    "Apple": 5,
+    "蘋果": 5,
+    "蘋果智慧": 6,
 }
 
 THREADS_KEYWORDS: dict[str, int] = {
